@@ -57,13 +57,19 @@ archbrace --version
 Configuration lives in `pyproject.toml` under `[tool.archbrace]`. See the specification
 for the full set of keys. The keys used by this increment include:
 
+Archbrace applies the same built-in path exclusions as
+[Ruff](https://docs.astral.sh/ruff/configuration/) (for example `.venv`, `.git`,
+`node_modules`, `build`, and `dist`) without requiring you to list them. Use
+`extend_exclude` to add project-specific patterns on top of those defaults; setting
+`exclude` replaces the defaults entirely.
+
 ```toml
 [tool.archbrace]
 format = "text"
 fail_on = "error"
 select = ["AR"]
 ignore_rules = []
-exclude = ["tests/**", ".venv/**"]
+extend_exclude = ["tests/**"]
 max_function_lines = 40
 vague_module_names = ["utils", "helpers", "common", "misc", "shared"]
 
@@ -79,4 +85,5 @@ Run the full local validation workflow from the repository root:
 ruff check .
 mypy archbrace
 pytest
+archbrace check .
 ```

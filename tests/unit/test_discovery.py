@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from archbrace.config import ArchbraceConfig
+from archbrace.config import DEFAULT_EXCLUDE, ArchbraceConfig
 from archbrace.discovery import discover_python_files
 
 
@@ -65,3 +65,16 @@ def test_non_python_file_is_ignored(tmp_path: Path) -> None:
     config = _config(tmp_path, exclude=())
     found = discover_python_files([tmp_path / "pkg" / "notes.txt"], config)
     assert found == []
+
+
+def test_default_excludes_skip_common_non_project_paths(tmp_path: Path) -> None:
+    (tmp_path / "src").mkdir()
+    (tmp_path / "src" / "app.py").write_text("x = 1\n", encoding="utf-8")
+    (tmp_path / ".venv" / "lib").mkdir(parents=True)
+    (tmp_path / ".venv" / "lib" / "site.py").write_text("y = 2\n", encoding="utf-8")
+    (tmp_path / "node_modules" / "pkg").mkdir(parents=True)
+    (tmp_path / "node_modules" / "pkg" / "index.py").write_text("z = 3\n", encoding="utf-8")
+
+    config = _config(tmp_path, exclude=DEFAULT_EXCLUDE)
+    found = discover_python_files([tmp_path], config)
+    assert [p.name for p in found] == ["app.py"]

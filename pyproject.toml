@@ -37,12 +37,7 @@ format = "text"
 fail_on = "error"
 select = ["AR"]
 ignore_rules = []
-exclude = [
-  "tests/**",
-  ".venv/**",
-  "build/**",
-  "dist/**",
-]
+extend_exclude = ["tests/**"]
 max_function_lines = 40
 
 [tool.ruff]

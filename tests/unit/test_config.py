@@ -6,7 +6,12 @@ from pathlib import Path
 
 import pytest
 
-from archbrace.config import ArchbraceConfig, find_config, load_config
+from archbrace.config import (
+    DEFAULT_EXCLUDE,
+    ArchbraceConfig,
+    find_config,
+    load_config,
+)
 from archbrace.errors import ConfigError
 
 
@@ -25,6 +30,43 @@ def test_defaults_when_no_archbrace_table(tmp_path: Path) -> None:
     assert config.max_function_lines == 40
     assert "utils" in config.vague_module_names
     assert config.root == tmp_path
+    assert config.exclude == DEFAULT_EXCLUDE
+
+
+def test_default_exclude_matches_ruff_common_paths() -> None:
+    config = ArchbraceConfig(config_path=None, root=Path("/tmp"))
+    spec = config.exclude_spec()
+    assert spec.match_file(".venv/lib/python3.11/site-packages/foo.py")
+    assert spec.match_file(".git/config")
+    assert spec.match_file("node_modules/pkg/index.py")
+    assert spec.match_file("build/lib/foo.py")
+    assert spec.match_file("dist/foo.py")
+    assert not spec.match_file("src/main.py")
+
+
+def test_exclude_replaces_defaults(tmp_path: Path) -> None:
+    _write(
+        tmp_path / "pyproject.toml",
+        '[tool.archbrace]\nexclude = ["custom/**"]\n',
+    )
+    config = load_config(None, start=tmp_path)
+    assert config.exclude == ("custom/**",)
+    spec = config.exclude_spec()
+    assert spec.match_file("custom/foo.py")
+    assert not spec.match_file(".venv/lib/foo.py")
+
+
+def test_extend_exclude_adds_to_defaults(tmp_path: Path) -> None:
+    _write(
+        tmp_path / "pyproject.toml",
+        '[tool.archbrace]\nextend_exclude = ["tests/**"]\n',
+    )
+    config = load_config(None, start=tmp_path)
+    assert "tests/**" in config.exclude
+    assert ".venv" in config.exclude
+    spec = config.exclude_spec()
+    assert spec.match_file("tests/unit/test_x.py")
+    assert spec.match_file(".venv/lib/foo.py")
 
 
 def test_reads_archbrace_values(tmp_path: Path) -> None:
