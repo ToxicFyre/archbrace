@@ -2,6 +2,10 @@
 Purpose:
     Render diagnostics as Ruff-like text output with a summary line (spec 8.1).
 
+Why is this in this project:
+    Provides the default human-readable output developers see when running the
+    linter locally.
+
 Inputs:
     Diagnostics, a base directory for display paths, and formatting options.
 

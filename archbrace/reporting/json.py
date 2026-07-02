@@ -2,6 +2,10 @@
 Purpose:
     Render diagnostics as versioned JSON (schema ``"1"``) (spec Section 8.2).
 
+Why is this in this project:
+    Gives CI systems and editors a stable, versioned machine-readable form of
+    the same diagnostics the text reporter prints.
+
 Inputs:
     Diagnostics, a base directory for display paths, and the scanned-file count.
 

@@ -3,6 +3,10 @@ Purpose:
     Read a single Python source file from disk and turn it into a ``ModuleInfo``,
     deriving its dotted module name from its path relative to the project root.
 
+Why is this in this project:
+    Concentrates the file-read-and-parse boundary so I/O and parse-error handling
+    stay consistent for every module.
+
 Inputs:
     A file path and the project root directory.
 

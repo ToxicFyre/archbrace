@@ -3,6 +3,10 @@ Purpose:
     Logging and error-visibility rules. This increment implements AR101
     (print used instead of a logger) and AR102 (silent broad exception handler).
 
+Why is this in this project:
+    Houses the observability checks that keep failures visible instead of printed
+    or silently swallowed.
+
 Inputs:
     A ``ProjectIndex`` (whose modules carry parsed ASTs) and an
     ``ArchbraceConfig``.

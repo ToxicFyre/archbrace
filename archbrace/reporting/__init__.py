@@ -3,6 +3,10 @@ Purpose:
     Shared reporting helpers: relative path normalization, deterministic
     diagnostic ordering, and severity counting (spec Section 8).
 
+Why is this in this project:
+    Shares ordering, path, and severity helpers so the text and JSON reporters
+    stay consistent with each other.
+
 Inputs:
     Diagnostics and a base directory for display paths.
 

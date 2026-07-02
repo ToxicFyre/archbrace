@@ -3,6 +3,10 @@ Purpose:
     Documentation contract rules. This increment implements AR060 (Module
     Contract Required, spec Section 7.4).
 
+Why is this in this project:
+    Enforces the module documentation contract, Archbrace's core guarantee that
+    every module states its purpose and interface.
+
 Inputs:
     A ``ProjectIndex`` and an ``ArchbraceConfig``.
 
@@ -45,6 +49,7 @@ class ModuleContractRule(Rule):
 
     DEFAULT_SECTIONS = (
         "Purpose",
+        "Why is this in this project",
         "Inputs",
         "Outputs",
         "Side effects",

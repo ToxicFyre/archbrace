@@ -4,6 +4,10 @@ Purpose:
     ``--version`` option, wired to configuration, analysis, rules, and reporting
     (spec Section 4).
 
+Why is this in this project:
+    The user-facing entry point that composes configuration, analysis, rules,
+    and reporting into a single command developers and CI actually run.
+
 Inputs:
     Command-line arguments and repository configuration.
 

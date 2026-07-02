@@ -4,6 +4,10 @@ Purpose:
     internal models (``RawMetrics``, floats, line maps) instead of Radon objects.
     Archbrace never re-implements Radon's calculations (spec Sections 7.1/7.2).
 
+Why is this in this project:
+    Keeps all Radon coupling in one adapter so metric semantics match Radon
+    exactly and the rest of the code stays library-agnostic.
+
 Inputs:
     Python source text.
 

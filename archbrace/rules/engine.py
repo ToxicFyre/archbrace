@@ -3,6 +3,10 @@ Purpose:
     Select which rules run, execute them against the project index, and apply
     configured severity overrides (spec Sections 5.2, 9.4, 11).
 
+Why is this in this project:
+    Centralizes rule selection, execution, and severity resolution so individual
+    rules stay small and free of orchestration concerns.
+
 Inputs:
     A collection of rules, the project index, and the active configuration.
 

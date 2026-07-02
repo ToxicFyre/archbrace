@@ -3,6 +3,10 @@ Purpose:
     Load, validate, and normalize Archbrace configuration from ``pyproject.toml``
     ``[tool.archbrace]`` tables, and merge command-line overrides on top.
 
+Why is this in this project:
+    Single source of truth for thresholds and toggles so rule behavior is
+    configurable per project while staying deterministic.
+
 Inputs:
     A ``pyproject.toml`` file (located by upward search or an explicit path) and
     optional CLI ``--select`` / ``--ignore`` overrides.

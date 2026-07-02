@@ -6,7 +6,14 @@ from collections.abc import Sequence
 
 from archbrace.rules.documentation import ModuleContractRule
 
-DEFAULT_SECTIONS = ("Purpose", "Inputs", "Outputs", "Side effects", "Failure behavior")
+DEFAULT_SECTIONS = (
+    "Purpose",
+    "Why is this in this project",
+    "Inputs",
+    "Outputs",
+    "Side effects",
+    "Failure behavior",
+)
 
 
 def _module_with_sections(sections: Sequence[str], *, code: str = "value = 1\n") -> str:
@@ -54,6 +61,8 @@ def test_headings_match_case_insensitively(index_from_source, base_config) -> No
     source = (
         '"""\n'
         "PURPOSE:\n"
+        "    Detail.\n"
+        "why is this in this project:\n"
         "    Detail.\n"
         "inputs :\n"
         "    Detail.\n"

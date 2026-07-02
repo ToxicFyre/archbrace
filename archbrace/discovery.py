@@ -3,6 +3,10 @@ Purpose:
     Discover the Python source files Archbrace should analyze, honoring the
     configured exclusion patterns.
 
+Why is this in this project:
+    Decides exactly which files a run analyzes, keeping exclusion and path
+    handling in one place instead of scattered across rules.
+
 Inputs:
     One or more filesystem paths (files or directories) and an
     ``ArchbraceConfig`` providing exclusion patterns and the project root.

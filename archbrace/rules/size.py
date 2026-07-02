@@ -3,6 +3,10 @@ Purpose:
     Size and shape rules: AR001 (Function Too Long), AR002 (File Too Long), and
     AR003 (Nesting Too Deep).
 
+Why is this in this project:
+    Houses the size and shape checks that keep functions and files small enough
+    to read and review.
+
 Inputs:
     A ``ProjectIndex`` and an ``ArchbraceConfig``.
 

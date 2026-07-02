@@ -26,6 +26,8 @@ _CALC_MODULE = (
     '"""\n'
     "Purpose:\n"
     "    Add numbers.\n\n"
+    "Why is this in this project:\n"
+    "    Provides the arithmetic used by the example package.\n\n"
     "Inputs:\n"
     "    Two addends.\n\n"
     "Outputs:\n"

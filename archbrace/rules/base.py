@@ -2,6 +2,10 @@
 Purpose:
     Define the ``Rule`` interface every Archbrace rule implements (spec Section 11).
 
+Why is this in this project:
+    Defines the one interface every rule implements so the engine runs them
+    uniformly and new rules drop in without engine changes.
+
 Inputs:
     A ``ProjectIndex`` and an ``ArchbraceConfig`` supplied by the engine.
 

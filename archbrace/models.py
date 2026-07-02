@@ -4,6 +4,10 @@ Purpose:
     diagnostics, function/class/module descriptors, and the project index that
     rules consume.
 
+Why is this in this project:
+    Central immutable data contracts shared by analysis, rules, and reporting so
+    those layers stay decoupled and pass structured values, not ad-hoc dicts.
+
 Inputs:
     Values produced by the analysis adapters (AST index, Radon metrics).
 

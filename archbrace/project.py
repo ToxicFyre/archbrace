@@ -4,6 +4,10 @@ Purpose:
     scanning each into a ``ModuleInfo``, and collecting them in a deterministic
     order (spec Sections 6, 9.3).
 
+Why is this in this project:
+    Builds the single project index once per run so every rule analyzes the same
+    consistent snapshot of the codebase.
+
 Inputs:
     Paths to analyze and the active ``ArchbraceConfig``.
 

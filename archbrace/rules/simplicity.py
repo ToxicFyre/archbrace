@@ -2,6 +2,10 @@
 Purpose:
     Simplicity rules. This increment implements AR040 (Vague Module Name).
 
+Why is this in this project:
+    Houses the naming and simplicity checks that keep module names expressing a
+    concrete responsibility.
+
 Inputs:
     A ``ProjectIndex`` and an ``ArchbraceConfig``.
 

@@ -3,6 +3,10 @@ Purpose:
     Define Archbrace's exception hierarchy so the CLI can map failures onto the
     documented exit codes (spec Section 4.5 / 9.4).
 
+Why is this in this project:
+    Centralizes the exception hierarchy so every layer signals failure the same
+    way and the CLI can map it onto a stable exit code.
+
 Inputs:
     None.
 

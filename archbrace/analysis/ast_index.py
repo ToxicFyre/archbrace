@@ -4,6 +4,10 @@ Purpose:
     docstring, top-level functions (with their nested functions), classes and
     their methods, and per-function metrics.
 
+Why is this in this project:
+    Turns raw syntax trees into the structural models every rule inspects, so
+    rules never have to touch the AST directly.
+
 Inputs:
     A file path, its source text, and the dotted module name.
 

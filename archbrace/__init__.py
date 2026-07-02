@@ -4,6 +4,10 @@ Purpose:
     exposes the analysis engine, rule catalog, reporting, and command-line entry
     point.
 
+Why is this in this project:
+    The package root ties the analysis, rules, reporting, and CLI layers into
+    the single ``archbrace`` distribution and exposes its version.
+
 Inputs:
     Python source files and ``pyproject.toml`` configuration.
 

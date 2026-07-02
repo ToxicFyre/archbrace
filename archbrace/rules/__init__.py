@@ -3,6 +3,10 @@ Purpose:
     Expose the rule interface, the execution engine, and the registry of all
     rules shipped in this Archbrace release.
 
+Why is this in this project:
+    Provides the single registry and execution entry point the CLI uses to run
+    the whole rule catalog.
+
 Inputs:
     None at import time; ``get_all_rules`` instantiates the concrete rules on
     demand.

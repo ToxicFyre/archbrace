@@ -3,6 +3,10 @@ Purpose:
     Complexity rules. This increment implements AR020 (Cyclomatic Complexity
     Too High) over Radon's measured complexity.
 
+Why is this in this project:
+    Houses the complexity checks that flag functions too branchy to maintain,
+    measured from Radon rather than re-derived.
+
 Inputs:
     A ``ProjectIndex`` and an ``ArchbraceConfig``.
 
