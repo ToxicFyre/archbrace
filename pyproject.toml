@@ -1,0 +1,65 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "archbrace"
+version = "0.1.0"
+description = "A deterministic architectural simplicity linter for Python."
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+dependencies = [
+  "click",
+  "rich",
+  "pathspec",
+  "radon",
+  "networkx",
+  "gitpython",
+]
+
+[project.optional-dependencies]
+dev = [
+  "pytest",
+  "ruff",
+  "mypy",
+]
+
+[project.scripts]
+archbrace = "archbrace.cli:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["archbrace"]
+
+[tool.archbrace]
+target_python = "3.11"
+format = "text"
+fail_on = "error"
+select = ["AR"]
+ignore_rules = []
+exclude = [
+  "tests/**",
+  ".venv/**",
+  "build/**",
+  "dist/**",
+]
+max_function_lines = 40
+
+[tool.ruff]
+target-version = "py311"
+line-length = 100
+extend-exclude = ["tests/fixtures"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]
+
+[tool.mypy]
+python_version = "3.11"
+warn_unused_ignores = true
+warn_redundant_casts = true
+disallow_untyped_defs = true
+ignore_missing_imports = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra"
