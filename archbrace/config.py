@@ -43,6 +43,40 @@ _KNOWN_TABLES: frozenset[str] = frozenset(
     {"severity", "module_contract", "io_contract", "layers"}
 )
 
+# Match Ruff's built-in ``exclude`` defaults so ``archbrace check .`` skips the
+# same non-project paths without extra configuration.
+# https://docs.astral.sh/ruff/configuration/
+DEFAULT_EXCLUDE: tuple[str, ...] = (
+    ".bzr",
+    ".direnv",
+    ".eggs",
+    ".git",
+    ".git-rewrite",
+    ".hg",
+    ".ipynb_checkpoints",
+    ".mypy_cache",
+    ".nox",
+    ".pants.d",
+    ".pyenv",
+    ".pytest_cache",
+    ".pytype",
+    ".ruff_cache",
+    ".svn",
+    ".tox",
+    ".venv",
+    ".vscode",
+    "__pypackages__",
+    "_build",
+    "buck-out",
+    "build",
+    "dist",
+    "node_modules",
+    "site-packages",
+    "venv",
+)
+
+_RESOLVED_EXCLUDE_KEYS: frozenset[str] = frozenset({"exclude", "extend_exclude"})
+
 
 @dataclass(frozen=True)
 class ArchbraceConfig:
@@ -57,7 +91,7 @@ class ArchbraceConfig:
 
     select: tuple[str, ...] = ("AR",)
     ignore_rules: tuple[str, ...] = ()
-    exclude: tuple[str, ...] = ()
+    exclude: tuple[str, ...] = DEFAULT_EXCLUDE
 
     max_function_lines: int = 40
     max_file_lines: int = 300
@@ -189,7 +223,6 @@ _STR_LIST_KEYS: frozenset[str] = frozenset(
     {
         "select",
         "ignore_rules",
-        "exclude",
         "vague_module_names",
         "suspicious_class_suffixes",
         "io_call_patterns",
@@ -274,10 +307,11 @@ def _build_config(
     values: dict[str, Any] = {"config_path": config_path, "root": root}
 
     for key, value in table.items():
-        if key in _KNOWN_TABLES:
+        if key in _KNOWN_TABLES or key in _RESOLVED_EXCLUDE_KEYS:
             continue
         values[key] = _coerce_value(key, value)
 
+    values["exclude"] = _resolve_exclude(table)
     values["severity"] = _parse_severity(table.get("severity", {}))
     values["module_contract_sections"] = _parse_sections(
         "module_contract", table.get("module_contract", {})
@@ -327,6 +361,17 @@ def _as_str_tuple(key: str, value: Any) -> tuple[str, ...]:
     if not isinstance(value, list) or not all(isinstance(item, str) for item in value):
         raise ConfigError(f"Configuration key {key!r} must be a list of strings.")
     return tuple(value)
+
+
+def _resolve_exclude(table: dict[str, Any]) -> tuple[str, ...]:
+    if "exclude" in table:
+        base = _as_str_tuple("exclude", table["exclude"])
+    else:
+        base = DEFAULT_EXCLUDE
+
+    if "extend_exclude" in table:
+        return base + _as_str_tuple("extend_exclude", table["extend_exclude"])
+    return base
 
 
 # Scalar/list keys grouped by the validator that coerces them.
