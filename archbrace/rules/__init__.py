@@ -46,12 +46,16 @@ def get_all_rules() -> list[Rule]:
     Failure behavior:
         Never raises for the bundled rule set.
     """
+    from .complexity import CyclomaticComplexityRule
     from .logging_rules import PrintUsedRule, SilentBroadExceptRule
     from .simplicity import VagueModuleNameRule
-    from .size import FunctionTooLongRule
+    from .size import FileTooLongRule, FunctionTooLongRule, NestingTooDeepRule
 
     rules: list[Rule] = [
         FunctionTooLongRule(),
+        FileTooLongRule(),
+        NestingTooDeepRule(),
+        CyclomaticComplexityRule(),
         VagueModuleNameRule(),
         PrintUsedRule(),
         SilentBroadExceptRule(),

@@ -21,6 +21,7 @@ Failure behavior:
 from __future__ import annotations
 
 import tomllib
+from collections.abc import Callable
 from dataclasses import dataclass, field, replace
 from pathlib import Path
 from typing import Any
@@ -271,22 +272,7 @@ def _build_config(
     for key, value in table.items():
         if key in _KNOWN_TABLES:
             continue
-        if key in _INT_KEYS:
-            values[key] = _as_int(key, value)
-        elif key in _FLOAT_KEYS:
-            values[key] = _as_float(key, value)
-        elif key in _BOOL_KEYS:
-            values[key] = _as_bool(key, value)
-        elif key in _STR_LIST_KEYS:
-            values[key] = _as_str_tuple(key, value)
-        elif key == "target_python":
-            values[key] = _as_str(key, value)
-        elif key == "format":
-            values[key] = _as_choice(key, value, _VALID_FORMATS)
-        elif key == "fail_on":
-            values[key] = _as_choice(key, value, _VALID_SEVERITIES)
-        else:
-            raise ConfigError(f"Unknown configuration key: [tool.archbrace] {key!r}")
+        values[key] = _coerce_value(key, value)
 
     values["severity"] = _parse_severity(table.get("severity", {}))
     values["module_contract_sections"] = _parse_sections(
@@ -337,6 +323,28 @@ def _as_str_tuple(key: str, value: Any) -> tuple[str, ...]:
     if not isinstance(value, list) or not all(isinstance(item, str) for item in value):
         raise ConfigError(f"Configuration key {key!r} must be a list of strings.")
     return tuple(value)
+
+
+# Scalar/list keys grouped by the validator that coerces them.
+_SCALAR_VALIDATORS: tuple[tuple[frozenset[str], Callable[[str, Any], Any]], ...] = (
+    (_INT_KEYS, _as_int),
+    (_FLOAT_KEYS, _as_float),
+    (_BOOL_KEYS, _as_bool),
+    (_STR_LIST_KEYS, _as_str_tuple),
+)
+
+
+def _coerce_value(key: str, value: Any) -> Any:
+    for keyset, validator in _SCALAR_VALIDATORS:
+        if key in keyset:
+            return validator(key, value)
+    if key == "target_python":
+        return _as_str(key, value)
+    if key == "format":
+        return _as_choice(key, value, _VALID_FORMATS)
+    if key == "fail_on":
+        return _as_choice(key, value, _VALID_SEVERITIES)
+    raise ConfigError(f"Unknown configuration key: [tool.archbrace] {key!r}")
 
 
 def _parse_severity(value: Any) -> dict[str, Severity]:

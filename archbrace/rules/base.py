@@ -19,9 +19,29 @@ Failure behavior:
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
+from collections.abc import Iterator
 
 from ..config import ArchbraceConfig
-from ..models import Diagnostic, ProjectIndex, Severity
+from ..models import Diagnostic, FunctionInfo, ModuleInfo, ProjectIndex, Severity
+
+
+def iter_functions(module: ModuleInfo) -> Iterator[FunctionInfo]:
+    """Yield every function in a module: top-level, nested, and class methods.
+
+    Shared by the per-function rules (AR001, AR003, AR020) so they analyze the
+    same set of functions without each re-implementing the traversal.
+    """
+
+    def walk(function: FunctionInfo) -> Iterator[FunctionInfo]:
+        yield function
+        for nested in function.nested_functions:
+            yield from walk(nested)
+
+    for function in module.functions:
+        yield from walk(function)
+    for klass in module.classes:
+        for method in klass.methods:
+            yield from walk(method)
 
 
 class Rule(ABC):

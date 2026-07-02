@@ -1,13 +1,14 @@
 """
 Purpose:
-    Size and shape rules. This increment implements AR001 (Function Too Long).
+    Size and shape rules: AR001 (Function Too Long), AR002 (File Too Long), and
+    AR003 (Nesting Too Deep).
 
 Inputs:
     A ``ProjectIndex`` and an ``ArchbraceConfig``.
 
 Outputs:
-    Diagnostics for functions whose source lines of code exceed
-    ``max_function_lines``.
+    Diagnostics for functions that exceed ``max_function_lines`` or
+    ``max_nesting_depth``, and modules that exceed ``max_file_lines``.
 
 Side effects:
     None.
@@ -18,26 +19,9 @@ Failure behavior:
 
 from __future__ import annotations
 
-from collections.abc import Iterator
-
 from ..config import ArchbraceConfig
-from ..models import Diagnostic, FunctionInfo, ModuleInfo, ProjectIndex
-from .base import Rule
-
-
-def _iter_all_functions(module: ModuleInfo) -> Iterator[FunctionInfo]:
-    """Yield every function in a module: top-level, nested, and class methods."""
-
-    def walk(function: FunctionInfo) -> Iterator[FunctionInfo]:
-        yield function
-        for nested in function.nested_functions:
-            yield from walk(nested)
-
-    for function in module.functions:
-        yield from walk(function)
-    for klass in module.classes:
-        for method in klass.methods:
-            yield from walk(method)
+from ..models import Diagnostic, ProjectIndex, SourceRange
+from .base import Rule, iter_functions
 
 
 class FunctionTooLongRule(Rule):
@@ -59,7 +43,7 @@ class FunctionTooLongRule(Rule):
         limit = config.max_function_lines
         diagnostics: list[Diagnostic] = []
         for module in project.modules:
-            for function in _iter_all_functions(module):
+            for function in iter_functions(module):
                 code_lines = function.code_lines
                 if code_lines > limit:
                     diagnostics.append(
@@ -75,6 +59,90 @@ class FunctionTooLongRule(Rule):
                             severity=self.default_severity,
                             metadata={
                                 "actual": code_lines,
+                                "limit": limit,
+                                "symbol": function.name,
+                            },
+                        )
+                    )
+        return diagnostics
+
+
+class FileTooLongRule(Rule):
+    """AR002 - flag a module whose Radon source-line count is too high."""
+
+    code = "AR002"
+    name = "file-too-long"
+    description = (
+        "Flag a module whose Radon source-line count exceeds max_file_lines."
+    )
+    default_severity = "error"
+
+    def check(
+        self,
+        project: ProjectIndex,
+        config: ArchbraceConfig,
+    ) -> list[Diagnostic]:
+        limit = config.max_file_lines
+        diagnostics: list[Diagnostic] = []
+        for module in project.modules:
+            sloc = module.raw_metrics.sloc
+            if sloc > limit:
+                diagnostics.append(
+                    Diagnostic(
+                        code=self.code,
+                        name=self.name,
+                        path=module.path,
+                        location=SourceRange(line=1, column=1),
+                        message=(
+                            f"File `{module.path.name}` has {sloc} source "
+                            f"lines. Limit is {limit}."
+                        ),
+                        severity=self.default_severity,
+                        metadata={
+                            "actual": sloc,
+                            "limit": limit,
+                            "symbol": module.module_name,
+                        },
+                    )
+                )
+        return diagnostics
+
+
+class NestingTooDeepRule(Rule):
+    """AR003 - flag a function whose structural nesting is too deep."""
+
+    code = "AR003"
+    name = "nesting-too-deep"
+    description = (
+        "Flag a function whose maximum structural nesting exceeds "
+        "max_nesting_depth."
+    )
+    default_severity = "error"
+
+    def check(
+        self,
+        project: ProjectIndex,
+        config: ArchbraceConfig,
+    ) -> list[Diagnostic]:
+        limit = config.max_nesting_depth
+        diagnostics: list[Diagnostic] = []
+        for module in project.modules:
+            for function in iter_functions(module):
+                depth = function.nesting_depth
+                if depth > limit:
+                    diagnostics.append(
+                        Diagnostic(
+                            code=self.code,
+                            name=self.name,
+                            path=module.path,
+                            location=function.location,
+                            message=(
+                                f"Function `{function.name}` has nesting depth "
+                                f"{depth}. Limit is {limit}."
+                            ),
+                            severity=self.default_severity,
+                            metadata={
+                                "actual": depth,
                                 "limit": limit,
                                 "symbol": function.name,
                             },

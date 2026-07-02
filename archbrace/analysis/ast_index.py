@@ -251,28 +251,34 @@ def _walk_own(node: ast.AST):  # type: ignore[no-untyped-def]
 
 
 def _names_introduced_by(node: ast.AST) -> set[str]:
+    return _target_bindings(node) | _optional_binding(node)
+
+
+def _target_bindings(node: ast.AST) -> set[str]:
     if isinstance(node, ast.Assign):
         names: set[str] = set()
         for target in node.targets:
             names |= _names_from_target(target)
         return names
-    if isinstance(node, ast.AnnAssign):
-        return _names_from_target(node.target)
-    if isinstance(node, (ast.For, ast.AsyncFor)):
+    if isinstance(node, (ast.AnnAssign, ast.For, ast.AsyncFor, ast.comprehension)):
         return _names_from_target(node.target)
     if isinstance(node, (ast.With, ast.AsyncWith)):
-        names = set()
-        for item in node.items:
-            if item.optional_vars is not None:
-                names |= _names_from_target(item.optional_vars)
-        return names
+        return _with_item_names(node)
+    return set()
+
+
+def _with_item_names(node: ast.With | ast.AsyncWith) -> set[str]:
+    names: set[str] = set()
+    for item in node.items:
+        if item.optional_vars is not None:
+            names |= _names_from_target(item.optional_vars)
+    return names
+
+
+def _optional_binding(node: ast.AST) -> set[str]:
     if isinstance(node, ast.ExceptHandler):
         return {node.name} if node.name else set()
-    if isinstance(node, ast.comprehension):
-        return _names_from_target(node.target)
-    if isinstance(node, ast.MatchAs):
-        return {node.name} if node.name else set()
-    if isinstance(node, ast.MatchStar):
+    if isinstance(node, (ast.MatchAs, ast.MatchStar)):
         return {node.name} if node.name else set()
     if isinstance(node, ast.MatchMapping):
         return {node.rest} if node.rest else set()
@@ -309,28 +315,37 @@ def _statement_depth(statement: ast.stmt) -> int:
 
 def _child_blocks(statement: ast.stmt) -> list[list[ast.stmt]]:
     if isinstance(statement, ast.If):
-        blocks = [statement.body]
-        orelse = statement.orelse
-        # Flatten ``elif`` chains so they count as one nesting level, not many.
-        while len(orelse) == 1 and isinstance(orelse[0], ast.If):
-            blocks.append(orelse[0].body)
-            orelse = orelse[0].orelse
-        if orelse:
-            blocks.append(orelse)
-        return blocks
+        return _if_blocks(statement)
     if isinstance(statement, (ast.For, ast.AsyncFor, ast.While)):
         return [statement.body, statement.orelse]
-    if isinstance(statement, (ast.With, ast.AsyncWith)):
-        return [statement.body]
     if isinstance(statement, ast.Try):
-        blocks = [statement.body, statement.orelse, statement.finalbody]
-        blocks.extend(handler.body for handler in statement.handlers)
-        return blocks
+        return _try_blocks(statement)
     if isinstance(statement, ast.Match):
         return [case.body for case in statement.cases]
-    if isinstance(statement, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)):
+    if isinstance(
+        statement,
+        (ast.With, ast.AsyncWith, ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef),
+    ):
         return [statement.body]
     return []
+
+
+def _if_blocks(statement: ast.If) -> list[list[ast.stmt]]:
+    blocks = [statement.body]
+    orelse = statement.orelse
+    # Flatten ``elif`` chains so they count as one nesting level, not many.
+    while len(orelse) == 1 and isinstance(orelse[0], ast.If):
+        blocks.append(orelse[0].body)
+        orelse = orelse[0].orelse
+    if orelse:
+        blocks.append(orelse)
+    return blocks
+
+
+def _try_blocks(statement: ast.Try) -> list[list[ast.stmt]]:
+    blocks = [statement.body, statement.orelse, statement.finalbody]
+    blocks.extend(handler.body for handler in statement.handlers)
+    return blocks
 
 
 def _expr_name(node: ast.expr) -> str | None:

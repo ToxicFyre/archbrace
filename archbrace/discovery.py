@@ -21,7 +21,7 @@ Failure behavior:
 from __future__ import annotations
 
 import os
-from collections.abc import Iterable
+from collections.abc import Iterable, Iterator
 from pathlib import Path
 
 import pathspec
@@ -52,16 +52,24 @@ def discover_python_files(
 
     collected: set[Path] = set()
     for entry in paths:
-        resolved = entry.resolve()
-        if resolved.is_dir():
-            for candidate in resolved.rglob("*.py"):
-                if candidate.is_file() and not _is_excluded(candidate, root, spec):
-                    collected.add(candidate)
-        elif resolved.is_file() and resolved.suffix == ".py":
-            if not _is_excluded(resolved, root, spec):
-                collected.add(resolved)
+        for candidate in _candidate_files(entry.resolve()):
+            if not _is_excluded(candidate, root, spec):
+                collected.add(candidate)
 
     return sorted(collected)
+
+
+def _candidate_files(resolved: Path) -> Iterator[Path]:
+    """Yield the ``.py`` files a single path contributes: a directory's tree, or
+    the file itself when it is a Python source file."""
+    if resolved.is_dir():
+        yield from (
+            candidate
+            for candidate in resolved.rglob("*.py")
+            if candidate.is_file()
+        )
+    elif resolved.is_file() and resolved.suffix == ".py":
+        yield resolved
 
 
 def _is_excluded(path: Path, root: Path, spec: pathspec.PathSpec) -> bool:
