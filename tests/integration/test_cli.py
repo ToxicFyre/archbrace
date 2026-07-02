@@ -22,19 +22,39 @@ def _write(path: Path, text: str) -> None:
     path.write_text(text, encoding="utf-8")
 
 
+_CALC_MODULE = (
+    '"""\n'
+    "Purpose:\n"
+    "    Add numbers.\n\n"
+    "Inputs:\n"
+    "    Two addends.\n\n"
+    "Outputs:\n"
+    "    Their sum.\n\n"
+    "Side effects:\n"
+    "    None.\n\n"
+    "Failure behavior:\n"
+    "    Never raises.\n"
+    '"""\n\n\n'
+    "def add(a, b):\n"
+    "    return a + b\n"
+)
+
+
 def _clean_project(root: Path) -> None:
     _write(root / "pyproject.toml", "[tool.archbrace]\n")
     _write(root / "pkg" / "__init__.py", "")
-    _write(
-        root / "pkg" / "calc.py",
-        '"""Adds numbers."""\n\n\ndef add(a, b):\n    return a + b\n',
-    )
+    _write(root / "pkg" / "calc.py", _CALC_MODULE)
 
 
 def _dirty_project(root: Path, *, severity: str = "error") -> None:
     severity_table = ""
     if severity == "warning":
-        severity_table = "\n[tool.archbrace.severity]\nAR040 = \"warning\"\nAR101 = \"warning\"\n"
+        severity_table = (
+            "\n[tool.archbrace.severity]\n"
+            'AR040 = "warning"\n'
+            'AR060 = "warning"\n'
+            'AR101 = "warning"\n'
+        )
     _write(root / "pyproject.toml", f"[tool.archbrace]\n{severity_table}")
     _write(root / "utils.py", '"""Stuff."""\n\n\ndef show(x):\n    print(x)\n')
 
