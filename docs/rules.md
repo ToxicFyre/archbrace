@@ -115,18 +115,33 @@ Multiple files in the same business domain with clear roles (for example
 `invoice/create.py`, `invoice/models.py`, `invoice/calculations.py`) stay below the
 threshold when they are not separated by generic layers and long wrapper chains.
 
-**Diagnostic format**
+**Diagnostic format (text)**
 
 ```text
-create_invoice has FLI 13, above max 8. Path:
-invoice/api.py:create_invoice
- -> invoice/handlers.py:CreateInvoiceHandler.handle
- -> ...
-Reasons: +5 module span; +6 generic layer crossings; +7 wrapper chain.
+invoice/api.py:4:0 AR073 create_invoice: flow locality 13/8 (wrapper chain, depth 4)
 ```
 
-Metadata includes `actual`, `limit`, `path`, component `scores`, and
-`unresolved_edges`.
+The terminal message is a single scannable line. Detailed context (wrapper path, reach,
+measurements, suggestions) lives in JSON metadata — see
+[AR073 metadata spec](specs/ar073-metadata.md).
+
+**Diagnostic format (JSON metadata, abbreviated)**
+
+```json
+{
+  "actual": 13,
+  "limit": 8,
+  "symbol": "create_invoice",
+  "dominant": { "component": "wrapper_chain", "score": 7 },
+  "measurements": { "module_count": 5, "wrapper_depth": 4 },
+  "wrapper_path": { "labels": ["invoice/api.py:create_invoice", "..."], "depth": 4 },
+  "reach": { "modules": ["invoice.api", "invoice.handlers", "..."], "generic_layers": ["handlers", "services"] },
+  "suggestions": [{ "component": "wrapper_chain", "priority": 1, "text": "Collapse 4 pass-through hops..." }]
+}
+```
+
+Legacy keys `path`, `scores`, `reasons`, and `unresolved_edges` remain for compatibility.
+Full field reference: [specs/ar073-metadata.md](specs/ar073-metadata.md).
 
 **Related configuration:** `max_fli`, `max_fli_depth`, `fli_ignore_tests` — see
 [configuration.md](configuration.md).

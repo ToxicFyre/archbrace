@@ -26,9 +26,9 @@ from ..models import FunctionInfo, ModuleInfo, ProjectIndex
 from ..rules.base import iter_functions
 from .call_graph import is_test_file
 from .call_index import CallableIndex, build_callable_index
+from .fli_assembly import build_flow_locality_finding
 from .fli_entry import is_entry_point
 from .fli_models import FlowLocalityFinding
-from .fli_scoring import build_display_path, compute_scores, format_reasons
 from .fli_traversal import traverse_from
 
 __all__ = [
@@ -67,16 +67,15 @@ def analyze_entry_point(
     if function.qualified_name not in index.nodes_by_qualified_name:
         return None
 
-    reached, _edges, unresolved = traverse_from(function, module, index, config)
-    scores = compute_scores(function, module, reached, unresolved, index, config)
-    path = build_display_path(function, module, index, config)
-    reasons = format_reasons(scores, unresolved)
-
-    return FlowLocalityFinding(
-        entry=function.qualified_name,
-        fli=scores.total,
-        scores=scores,
-        path=path,
-        unresolved_edges=unresolved,
-        reasons=reasons,
+    reached, _edges, unresolved, depth_limited = traverse_from(
+        function, module, index, config
+    )
+    return build_flow_locality_finding(
+        function,
+        module,
+        reached,
+        unresolved,
+        depth_limited,
+        index,
+        config,
     )

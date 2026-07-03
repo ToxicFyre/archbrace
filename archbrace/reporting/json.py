@@ -27,14 +27,26 @@ from pathlib import Path
 from typing import Any
 
 from ..models import Diagnostic
+from ..rules import get_all_rules
 from . import count_severities, relative_path, sort_diagnostics
 
 SCHEMA_VERSION = "1"
 
+_RULE_URLS: dict[str, str | None] | None = None
+
+
+def _rule_urls() -> dict[str, str | None]:
+    global _RULE_URLS
+    if _RULE_URLS is None:
+        _RULE_URLS = {
+            rule.code: rule.documentation_url for rule in get_all_rules()
+        }
+    return _RULE_URLS
+
 
 def _diagnostic_to_dict(diagnostic: Diagnostic, base: Path) -> dict[str, Any]:
     location = diagnostic.location
-    return {
+    payload: dict[str, Any] = {
         "code": diagnostic.code,
         "name": diagnostic.name,
         "path": relative_path(diagnostic.path, base),
@@ -46,6 +58,10 @@ def _diagnostic_to_dict(diagnostic: Diagnostic, base: Path) -> dict[str, Any]:
         "severity": diagnostic.severity,
         "metadata": diagnostic.metadata,
     }
+    url = _rule_urls().get(diagnostic.code)
+    if url is not None:
+        payload["url"] = url
+    return payload
 
 
 def render_json(

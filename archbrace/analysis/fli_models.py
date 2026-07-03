@@ -105,6 +105,67 @@ class FliScores:
 
 
 @dataclass(frozen=True)
+class FliMeasurements:
+    """Raw counts behind FLI score buckets."""
+
+    module_count: int
+    wrapper_depth: int
+    generic_layer_count: int
+    remote_domain_count: int
+    foreign_module_count: int
+    unresolved_call_count: int
+    traversal_depth_limit: int
+
+
+@dataclass(frozen=True)
+class DominantComponent:
+    """The score component that contributed most to the FLI."""
+
+    component: str
+    score: int
+    ties: tuple[str, ...]
+
+
+@dataclass(frozen=True)
+class EntryPointInfo:
+    """Why a function was treated as a public entry point."""
+
+    signals: tuple[str, ...]
+    decorators: tuple[str, ...]
+    is_public: bool
+    parent_class: str | None
+
+
+@dataclass(frozen=True)
+class FliSuggestion:
+    """Component-specific guidance for fixing a high FLI."""
+
+    component: str
+    priority: int
+    text: str
+
+
+@dataclass(frozen=True)
+class ReachSummary:
+    """Full traversal reach from an entry point."""
+
+    modules: tuple[str, ...]
+    generic_layers: tuple[str, ...]
+    remote_domains: tuple[str, ...]
+    visited_shared_utils: bool
+    truncated: bool
+
+
+@dataclass(frozen=True)
+class WrapperPath:
+    """Longest pass-through wrapper chain from an entry point."""
+
+    labels: tuple[str, ...]
+    qualified_names: tuple[str, ...]
+    depth: int
+
+
+@dataclass(frozen=True)
 class FlowLocalityFinding:
     """An entry point whose FLI exceeds the configured limit."""
 
@@ -114,3 +175,12 @@ class FlowLocalityFinding:
     path: tuple[str, ...]
     unresolved_edges: int
     reasons: tuple[str, ...]
+    reached_modules: tuple[str, ...]
+    measurements: FliMeasurements
+    dominant: DominantComponent
+    entry_point: EntryPointInfo
+    suggestions: tuple[FliSuggestion, ...]
+    caveats: tuple[str, ...]
+    wrapper_path: WrapperPath
+    reach: ReachSummary
+    depth_limited: bool
