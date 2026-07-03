@@ -55,9 +55,11 @@ def test_module_docstring_and_tree() -> None:
     assert module.module_name == "pkg.example"
 
 
-def test_imports_are_deferred_to_empty_tuple() -> None:
-    # Import resolution is a follow-up; this increment reports no imports.
-    assert _module().imports == ()
+def test_imports_are_collected() -> None:
+    module = _module()
+    assert len(module.imports) == 1
+    assert module.imports[0].module == "os"
+    assert module.imports[0].names == ("os",)
 
 
 def test_only_top_level_functions_are_listed() -> None:
@@ -79,6 +81,9 @@ def test_function_parameters_and_flags() -> None:
     assert outer.parameters == ("a", "b", "args", "kwargs")
     assert outer.has_docstring is True
     assert outer.is_public is True
+    assert outer.decorators == ("decorator",)
+    assert outer.is_async is False
+    assert outer.parent_class is None
 
 
 def test_function_span_includes_decorator() -> None:
@@ -110,6 +115,7 @@ def test_classes_methods_and_bases() -> None:
     assert widget.methods[0].is_public is True
     assert widget.methods[1].is_public is False
     assert widget.methods[0].qualified_name == "pkg.example.Widget.method"
+    assert widget.methods[0].parent_class == "pkg.example.Widget"
 
 
 def test_raw_metrics_and_maintainability_populated() -> None:

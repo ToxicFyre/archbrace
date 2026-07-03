@@ -39,6 +39,24 @@ select = ["AR"]
 ignore_rules = []
 extend_exclude = ["tests/**"]
 max_function_lines = 40
+max_wrapper_chain_depth = 2
+wrapper_chain_exempt_decorators = [
+  "click.command",
+  "app.route",
+  "router.get",
+  "router.post",
+  "celery.task",
+]
+wrapper_chain_exempt_name_patterns = [
+  "main",
+  "__enter__",
+  "__exit__",
+  "__aenter__",
+  "__aexit__",
+]
+
+[tool.archbrace.severity]
+AR070 = "warning"
 
 [tool.ruff]
 target-version = "py311"

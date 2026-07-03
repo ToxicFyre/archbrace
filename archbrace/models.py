@@ -111,6 +111,9 @@ class FunctionInfo:
     calls: tuple[CallRef, ...]
     nested_functions: tuple[FunctionInfo, ...] = ()
     code_lines: int = 0
+    decorators: tuple[str, ...] = ()
+    is_async: bool = False
+    parent_class: str | None = None
 
 
 @dataclass(frozen=True)

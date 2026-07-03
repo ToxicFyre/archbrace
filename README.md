@@ -10,22 +10,27 @@ Archbrace answers project-structure questions such as:
 - Are modules named after clear responsibilities?
 - Are side effects visible?
 - Is exception handling silent?
-
-See [`Archbrace_Project_Spec_Final.md`](Archbrace_Project_Spec_Final.md) for the full
-specification.
+- Are there long chains of pass-through wrapper functions?
 
 ## Status
 
-This is the first implementation increment (a "walking skeleton"). It ships an
-end-to-end pipeline (`discover -> parse -> index -> rules -> report`) wired to a small
-starter set of rules:
+Archbrace ships an end-to-end pipeline (`discover -> parse -> index -> rules -> report`)
+and the following rules:
 
-| Code | Rule |
-|---|---|
-| AR001 | Function too long |
-| AR040 | Vague module name |
-| AR101 | `print()` used instead of logger |
-| AR102 | Silent broad exception handler |
+| Code | Rule | Default severity |
+|------|------|------------------|
+| AR001 | Function too long | error |
+| AR002 | File too long | error |
+| AR003 | Nesting too deep | error |
+| AR020 | Cyclomatic complexity | error |
+| AR040 | Vague module name | error |
+| AR060 | Module contract | error |
+| AR070 | Wrapper chain too deep | warning |
+| AR101 | `print()` used instead of logger | error |
+| AR102 | Silent broad exception handler | error |
+
+Rule details: [`docs/rules.md`](docs/rules.md). Configuration reference:
+[`docs/configuration.md`](docs/configuration.md).
 
 ## Installation (development)
 
@@ -39,10 +44,38 @@ python3.11 -m venv .venv
 ```bash
 archbrace check src/
 archbrace check . --format json
-archbrace check src/ --select AR001,AR040
-archbrace check src/ --ignore AR101
+archbrace check src/ --select AR001,AR070
+archbrace check src/ --ignore AR070
 archbrace --version
 ```
+
+### AR070 example
+
+With the default `max_wrapper_chain_depth = 2`, a chain of three wrapper hops is
+reported at the entry function:
+
+```python
+def run_job(config):
+    return execute_job(config)
+
+def execute_job(config):
+    return process_job(config)
+
+def process_job(config):
+    return build_report(config)
+
+def build_report(config):
+    return config
+```
+
+```text
+warning[AR070] src/jobs.py:1: Wrapper chain is too deep: run_job -> execute_job ->
+process_job -> build_report. Depth is 3; limit is 2. This may be intentional. Consider
+collapsing one or more pass-through layers if they do not express a real boundary.
+```
+
+See [`docs/rules.md#ar070--wrapper-chain-too-deep`](docs/rules.md#ar070--wrapper-chain-too-deep)
+for detection behavior, exemptions, and non-goals.
 
 ### Exit codes
 
@@ -54,8 +87,7 @@ archbrace --version
 
 ## Configuration
 
-Configuration lives in `pyproject.toml` under `[tool.archbrace]`. See the specification
-for the full set of keys. The keys used by this increment include:
+Configuration lives in `pyproject.toml` under `[tool.archbrace]`.
 
 Archbrace applies the same built-in path exclusions as
 [Ruff](https://docs.astral.sh/ruff/configuration/) (for example `.venv`, `.git`,
@@ -71,11 +103,28 @@ select = ["AR"]
 ignore_rules = []
 extend_exclude = ["tests/**"]
 max_function_lines = 40
+max_wrapper_chain_depth = 2
 vague_module_names = ["utils", "helpers", "common", "misc", "shared"]
+wrapper_chain_exempt_decorators = [
+  "click.command",
+  "app.route",
+  "router.get",
+  "router.post",
+  "celery.task",
+]
+wrapper_chain_exempt_name_patterns = [
+  "main",
+  "__enter__",
+  "__exit__",
+  "__aenter__",
+  "__aexit__",
+]
 
 [tool.archbrace.severity]
-AR021 = "warning"
+AR070 = "warning"
 ```
+
+Full key reference: [`docs/configuration.md`](docs/configuration.md).
 
 ## Development
 
@@ -87,3 +136,6 @@ mypy archbrace
 pytest
 archbrace check .
 ```
+
+If the `archbrace` entry point is not on your `PATH` after an editable install, use
+`python3 -m archbrace.cli check .` instead.
