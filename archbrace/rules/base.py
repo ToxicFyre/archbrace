@@ -55,6 +55,7 @@ class Rule(ABC):
     name: str
     description: str
     default_severity: Severity
+    documentation_url: str | None = None
 
     @abstractmethod
     def check(

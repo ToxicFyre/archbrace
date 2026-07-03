@@ -37,13 +37,14 @@ def traverse_from(
     start_module: ModuleInfo,
     index: CallableIndex,
     config: ArchbraceConfig,
-) -> tuple[set[str], list[CallEdge], int]:
+) -> tuple[set[str], list[CallEdge], int, bool]:
     state = _TraversalState(
         reached_modules={start_module.module_name},
         edges=[],
         unresolved=0,
         queue=[(start.qualified_name, 0)],
         visited=set(),
+        depth_limited=False,
     )
     while state.queue:
         current_name, depth = state.queue.pop(0)
@@ -58,8 +59,8 @@ def traverse_from(
         state.reached_modules.add(module.module_name)
         if depth >= config.max_fli_depth:
             continue
-        _visit_calls(state, current, module, node, index, depth)
-    return state.reached_modules, state.edges, state.unresolved
+        _visit_calls(state, current, module, node, index, config, depth)
+    return state.reached_modules, state.edges, state.unresolved, state.depth_limited
 
 
 class _TraversalState:
@@ -71,12 +72,14 @@ class _TraversalState:
         unresolved: int,
         queue: list[tuple[str, int]],
         visited: set[str],
+        depth_limited: bool,
     ) -> None:
         self.reached_modules = reached_modules
         self.edges = edges
         self.unresolved = unresolved
         self.queue = queue
         self.visited = visited
+        self.depth_limited = depth_limited
 
 
 def _visit_calls(
@@ -85,12 +88,15 @@ def _visit_calls(
     module: ModuleInfo,
     node: _FunctionNode,
     index: CallableIndex,
+    config: ArchbraceConfig,
     depth: int,
 ) -> None:
     for call in iter_function_calls(node):
         resolved = resolve_call(current, call, module, index)
         if resolved is not None and resolved in index.callables_by_qualified_name:
-            _record_resolved_call(state, current, call, module, index, resolved, depth)
+            _record_resolved_call(
+                state, current, call, module, index, config, resolved, depth
+            )
         elif is_unresolved_call(call):
             _record_unresolved_call(state, current.qualified_name, call)
 
@@ -101,6 +107,7 @@ def _record_resolved_call(
     call: ast.Call,
     module: ModuleInfo,
     index: CallableIndex,
+    config: ArchbraceConfig,
     resolved: str,
     depth: int,
 ) -> None:
@@ -119,6 +126,8 @@ def _record_resolved_call(
             "high",
         )
     )
+    if depth + 1 >= config.max_fli_depth:
+        state.depth_limited = True
     state.queue.append((resolved, depth + 1))
 
 

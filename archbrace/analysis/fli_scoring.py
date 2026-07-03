@@ -193,6 +193,4 @@ def format_reasons(scores: FliScores, unresolved: int) -> tuple[str, ...]:
         reasons.append(f"+{scores.remote_domain} remote domain")
     if scores.unresolved_edge:
         reasons.append(f"+{scores.unresolved_edge} unresolved edges")
-    if unresolved:
-        reasons.append(f"{unresolved} unresolved local-looking calls")
     return tuple(reasons)

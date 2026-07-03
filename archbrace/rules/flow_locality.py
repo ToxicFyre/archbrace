@@ -21,11 +21,18 @@ Failure behavior:
 
 from __future__ import annotations
 
+from ..analysis.fli_metadata import format_lean_message
 from ..analysis.fli_models import FlowLocalityFinding
 from ..analysis.flow_locality import find_flow_locality_violations
 from ..config import ArchbraceConfig
 from ..models import Diagnostic, FunctionInfo, ModuleInfo, ProjectIndex
 from .base import Rule, iter_functions
+from .fli_metadata import finding_metadata
+
+DOCUMENTATION_URL = (
+    "https://github.com/ToxicFyre/archbrace/blob/main/docs/rules.md"
+    "#ar073--flow-locality-index"
+)
 
 
 class FlowLocalityIndexRule(Rule):
@@ -38,6 +45,7 @@ class FlowLocalityIndexRule(Rule):
         "files, generic layers, and pass-through wrappers."
     )
     default_severity = "warning"
+    documentation_url = DOCUMENTATION_URL
 
     def check(
         self,
@@ -67,48 +75,18 @@ def _diagnostic_for(
         location=function.location,
         message=_finding_message(function.name, finding, limit),
         severity=FlowLocalityIndexRule.default_severity,
-        metadata=_finding_metadata(function.name, finding, limit),
+        metadata=finding_metadata(function.name, finding, limit),
     )
 
 
 def _finding_message(name: str, finding: FlowLocalityFinding, limit: int) -> str:
-    path_display = "\n -> ".join(finding.path)
-    reasons = "; ".join(finding.reasons)
-    suffix = _underestimate_note(finding.unresolved_edges)
-    return (
-        f"{name} has FLI {finding.fli}, above max {limit}. "
-        f"Path:\n{path_display}\n"
-        f"Reasons: {reasons}.{suffix} "
-        "Consider moving the workflow narrative closer to the entry "
-        "point or inlining pass-through wrappers."
+    return format_lean_message(
+        name,
+        finding.fli,
+        limit,
+        finding.dominant,
+        finding.measurements,
     )
-
-
-def _underestimate_note(unresolved_edges: int) -> str:
-    if not unresolved_edges:
-        return ""
-    return (
-        f" FLI may be underestimated: {unresolved_edges} "
-        "unresolved local-looking calls."
-    )
-
-
-def _finding_metadata(name: str, finding: FlowLocalityFinding, limit: int) -> dict[str, object]:
-    return {
-        "actual": finding.fli,
-        "limit": limit,
-        "symbol": name,
-        "path": list(finding.path),
-        "scores": {
-            "module_span": finding.scores.module_span,
-            "layer_crossing": finding.scores.layer_crossing,
-            "wrapper_chain": finding.scores.wrapper_chain,
-            "remote_domain": finding.scores.remote_domain,
-            "unresolved_edge": finding.scores.unresolved_edge,
-        },
-        "unresolved_edges": finding.unresolved_edges,
-        "reasons": list(finding.reasons),
-    }
 
 
 def _function_for_qualified_name(project: ProjectIndex, qualified_name: str) -> FunctionInfo | None:
