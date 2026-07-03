@@ -35,6 +35,7 @@ from ..models import (
     SourceRange,
 )
 from . import radon_metrics
+from .imports import collect_imports
 
 _FunctionNode = ast.FunctionDef | ast.AsyncFunctionDef
 _SCOPE_NODES = (ast.FunctionDef, ast.AsyncFunctionDef, ast.Lambda, ast.ClassDef)
@@ -96,7 +97,7 @@ def build_module_info(
         module_name=module_name,
         source=source,
         layer=layer,
-        imports=(),
+        imports=collect_imports(tree),
         functions=functions,
         classes=classes,
         module_docstring=ast.get_docstring(tree),
@@ -111,11 +112,18 @@ def _build_function(
     prefix: str,
     complexity: dict[int, int],
     code_lines: frozenset[int],
+    *,
+    parent_class: str | None = None,
 ) -> FunctionInfo:
     qualified_name = f"{prefix}.{node.name}"
     nested = tuple(
-        _build_function(child, qualified_name, complexity, code_lines)
+        _build_function(child, qualified_name, complexity, code_lines, parent_class=parent_class)
         for child in _collect_direct_functions(node)
+    )
+    decorators = tuple(
+        name
+        for decorator in node.decorator_list
+        if (name := _expr_name(decorator)) is not None
     )
     return FunctionInfo(
         qualified_name=qualified_name,
@@ -131,6 +139,9 @@ def _build_function(
         calls=_collect_calls(node),
         nested_functions=nested,
         code_lines=_count_code_lines(node, code_lines),
+        decorators=decorators,
+        is_async=isinstance(node, ast.AsyncFunctionDef),
+        parent_class=parent_class,
     )
 
 
@@ -142,7 +153,13 @@ def _build_class(
 ) -> ClassInfo:
     qualified_name = f"{module_name}.{node.name}"
     methods = tuple(
-        _build_function(child, qualified_name, complexity, code_lines)
+        _build_function(
+            child,
+            qualified_name,
+            complexity,
+            code_lines,
+            parent_class=qualified_name,
+        )
         for child in node.body
         if isinstance(child, (ast.FunctionDef, ast.AsyncFunctionDef))
     )

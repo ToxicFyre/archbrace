@@ -24,6 +24,7 @@ starter set of rules:
 |---|---|
 | AR001 | Function too long |
 | AR040 | Vague module name |
+| AR070 | Wrapper chain too deep |
 | AR101 | `print()` used instead of logger |
 | AR102 | Silent broad exception handler |
 
@@ -71,7 +72,10 @@ select = ["AR"]
 ignore_rules = []
 extend_exclude = ["tests/**"]
 max_function_lines = 40
+max_wrapper_chain_depth = 2
 vague_module_names = ["utils", "helpers", "common", "misc", "shared"]
+wrapper_chain_exempt_decorators = ["click.command", "app.route", "router.get"]
+wrapper_chain_exempt_name_patterns = ["main", "__enter__", "__exit__"]
 
 [tool.archbrace.severity]
 AR021 = "warning"
@@ -85,5 +89,6 @@ Run the full local validation workflow from the repository root:
 ruff check .
 mypy archbrace
 pytest
+python3 -m archbrace.cli check .
 archbrace check .
 ```

@@ -106,6 +106,20 @@ class ArchbraceConfig:
     max_local_variables: int = 15
 
     max_wrapper_chain_depth: int = 2
+    wrapper_chain_exempt_decorators: tuple[str, ...] = (
+        "click.command",
+        "app.route",
+        "router.get",
+        "router.post",
+        "celery.task",
+    )
+    wrapper_chain_exempt_name_patterns: tuple[str, ...] = (
+        "main",
+        "__enter__",
+        "__exit__",
+        "__aenter__",
+        "__aexit__",
+    )
     max_changed_files: int = 8
     max_changed_lines: int = 400
     max_new_functions: int = 12
@@ -226,6 +240,8 @@ _STR_LIST_KEYS: frozenset[str] = frozenset(
         "vague_module_names",
         "suspicious_class_suffixes",
         "io_call_patterns",
+        "wrapper_chain_exempt_decorators",
+        "wrapper_chain_exempt_name_patterns",
     }
 )
 
