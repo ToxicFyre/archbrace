@@ -52,6 +52,7 @@ def get_all_rules() -> list[Rule]:
     """
     from .complexity import CyclomaticComplexityRule
     from .documentation import ModuleContractRule
+    from .flow_locality import FlowLocalityIndexRule
     from .indirection import WrapperChainTooDeepRule
     from .logging_rules import PrintUsedRule, SilentBroadExceptRule
     from .simplicity import VagueModuleNameRule
@@ -65,6 +66,7 @@ def get_all_rules() -> list[Rule]:
         VagueModuleNameRule(),
         ModuleContractRule(),
         WrapperChainTooDeepRule(),
+        FlowLocalityIndexRule(),
         PrintUsedRule(),
         SilentBroadExceptRule(),
     ]
