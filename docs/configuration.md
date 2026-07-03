@@ -49,6 +49,34 @@ AR070 = "warning"
 | `max_nesting_depth` | `3` | AR003 |
 | `max_cyclomatic_complexity` | `8` | AR020 |
 | `max_wrapper_chain_depth` | `2` | AR070 |
+| `max_fli` | `8` | AR073 |
+| `max_fli_depth` | `4` | AR073 |
+| `fli_ignore_tests` | `true` | AR073 |
+
+## Flow locality index (AR073)
+
+```toml
+[tool.archbrace]
+max_fli = 8
+max_fli_depth = 4
+fli_ignore_tests = true
+```
+
+### `max_fli`
+
+Maximum Flow Locality Index before a public entry point is flagged. FLI combines
+module span, generic layer crossings, wrapper chains, remote-domain hops, and
+unresolved-edge penalties.
+
+### `max_fli_depth`
+
+Maximum call-graph depth to traverse from each entry point when computing FLI. This
+limits how far Archbrace follows conservative local callees.
+
+### `fli_ignore_tests`
+
+When `true`, test modules (`test_*.py`, `*_test.py`, `conftest.py`) are not analyzed
+as FLI entry points.
 
 ## Wrapper chain (AR070)
 

@@ -32,8 +32,11 @@ from typing import Any
 
 import pathspec
 
+from .default_exclude import DEFAULT_EXCLUDE
 from .errors import ConfigError
 from .models import Severity
+
+__all__ = ["ArchbraceConfig", "DEFAULT_EXCLUDE", "find_config", "load_config"]
 
 _VALID_SEVERITIES: frozenset[str] = frozenset({"error", "warning"})
 _VALID_FORMATS: frozenset[str] = frozenset({"text", "json"})
@@ -41,38 +44,6 @@ _VALID_FORMATS: frozenset[str] = frozenset({"text", "json"})
 # Nested ``[tool.archbrace.*]`` tables handled explicitly (spec Section 5).
 _KNOWN_TABLES: frozenset[str] = frozenset(
     {"severity", "module_contract", "io_contract", "layers"}
-)
-
-# Match Ruff's built-in ``exclude`` defaults so ``archbrace check .`` skips the
-# same non-project paths without extra configuration.
-# https://docs.astral.sh/ruff/configuration/
-DEFAULT_EXCLUDE: tuple[str, ...] = (
-    ".bzr",
-    ".direnv",
-    ".eggs",
-    ".git",
-    ".git-rewrite",
-    ".hg",
-    ".ipynb_checkpoints",
-    ".mypy_cache",
-    ".nox",
-    ".pants.d",
-    ".pyenv",
-    ".pytest_cache",
-    ".pytype",
-    ".ruff_cache",
-    ".svn",
-    ".tox",
-    ".venv",
-    ".vscode",
-    "__pypackages__",
-    "_build",
-    "buck-out",
-    "build",
-    "dist",
-    "node_modules",
-    "site-packages",
-    "venv",
 )
 
 _RESOLVED_EXCLUDE_KEYS: frozenset[str] = frozenset({"exclude", "extend_exclude"})
@@ -106,6 +77,9 @@ class ArchbraceConfig:
     max_local_variables: int = 15
 
     max_wrapper_chain_depth: int = 2
+    max_fli: int = 8
+    max_fli_depth: int = 4
+    fli_ignore_tests: bool = True
     wrapper_chain_exempt_decorators: tuple[str, ...] = (
         "click.command",
         "app.route",
@@ -217,6 +191,8 @@ _INT_KEYS: frozenset[str] = frozenset(
         "max_returns",
         "max_local_variables",
         "max_wrapper_chain_depth",
+        "max_fli",
+        "max_fli_depth",
         "max_changed_files",
         "max_changed_lines",
         "max_new_functions",
@@ -231,6 +207,7 @@ _BOOL_KEYS: frozenset[str] = frozenset(
         "require_io_docstrings",
         "require_orchestrator_step_comments",
         "require_orchestrator_logging",
+        "fli_ignore_tests",
     }
 )
 _STR_LIST_KEYS: frozenset[str] = frozenset(

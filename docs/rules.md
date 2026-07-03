@@ -14,6 +14,7 @@ with `[tool.archbrace].select` and can be overridden with `[tool.archbrace.sever
 | AR040 | `vague-module-name` | error | `vague_module_names` |
 | AR060 | `module-contract` | error | `require_module_contract` |
 | AR070 | `wrapper-chain-too-deep` | warning | `max_wrapper_chain_depth` |
+| AR073 | `flow-locality-index` | warning | `max_fli` |
 | AR101 | `print-used` | error | — |
 | AR102 | `silent-broad-except` | error | — |
 
@@ -82,3 +83,50 @@ Metadata includes `actual`, `limit`, and the qualified `chain`.
 
 **Related configuration:** `max_wrapper_chain_depth`, `wrapper_chain_exempt_decorators`,
 `wrapper_chain_exempt_name_patterns` — see [configuration.md](configuration.md).
+
+## AR073 — Flow locality index
+
+**Purpose:** Flag public entry points whose behavior is spread across too many files,
+generic architectural layers, and pass-through wrappers.
+
+**Default severity:** `warning`.
+
+**What is scored**
+
+For each public entry point, Archbrace walks a conservative local call graph (depth
+limited by `max_fli_depth`) and computes:
+
+```text
+FLI = module_span + layer_crossing + wrapper_chain + remote_domain + unresolved_edge
+```
+
+- **Module span** — distinct local modules reached (many files alone is not bad)
+- **Layer crossing** — paths through generic folders such as `handlers/`, `services/`,
+  `repositories/`, `utils/`
+- **Wrapper chain** — longest chain of thin pass-through functions
+- **Remote domain** — modules outside the entry point's domain, especially
+  `shared/`, `common/`, or `utils/`
+- **Unresolved edge penalty** — dynamic calls that were not guessed (`callback()`,
+  `getattr`, registries)
+
+**What should pass**
+
+Multiple files in the same business domain with clear roles (for example
+`invoice/create.py`, `invoice/models.py`, `invoice/calculations.py`) stay below the
+threshold when they are not separated by generic layers and long wrapper chains.
+
+**Diagnostic format**
+
+```text
+create_invoice has FLI 13, above max 8. Path:
+invoice/api.py:create_invoice
+ -> invoice/handlers.py:CreateInvoiceHandler.handle
+ -> ...
+Reasons: +5 module span; +6 generic layer crossings; +7 wrapper chain.
+```
+
+Metadata includes `actual`, `limit`, `path`, component `scores`, and
+`unresolved_edges`.
+
+**Related configuration:** `max_fli`, `max_fli_depth`, `fli_ignore_tests` — see
+[configuration.md](configuration.md).

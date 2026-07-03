@@ -114,4 +114,7 @@ def _resolve_prefixed_call(
     qualified = f"{module_path}.{name}"
     if qualified in index.callables_by_qualified_name:
         return qualified
+    class_method = f"{module_path}.{prefix}.{name}"
+    if class_method in index.callables_by_qualified_name:
+        return class_method
     return None
