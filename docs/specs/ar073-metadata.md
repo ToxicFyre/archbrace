@@ -1,6 +1,6 @@
 # Spec: AR073 Rich Metadata
 
-**Status:** Draft  
+**Status:** Implemented  
 **Rule:** AR073 — `flow-locality-index`  
 **Audience:** Archbrace implementers, IDE/CI integrators, AI agents  
 **Related code:** `archbrace/rules/flow_locality.py`, `archbrace/analysis/flow_locality.py`,
@@ -786,13 +786,13 @@ earlier than schema v2.
 
 ## 17. Acceptance criteria
 
-- [ ] AR073 `message` is a single line with no embedded path or fix prose
-- [ ] Metadata includes `dominant`, `measurements`, `reach`, `wrapper_path`,
+- [x] AR073 `message` is a single line with no embedded path or fix prose
+- [x] Metadata includes `dominant`, `measurements`, `reach`, `wrapper_path`,
       `entry_point`, `suggestions`, `caveats`
-- [ ] `path` remains and equals `wrapper_path.labels`
-- [ ] Raw measurements explain every non-zero score bucket
-- [ ] `reach.modules` reflects full traversal, not wrapper path alone
-- [ ] Unresolved edge info is not duplicated across `reasons` and `caveats`
-- [ ] All new fields are deterministic and covered by unit tests
-- [ ] `docs/rules.md` documents the metadata contract and links here
-- [ ] Full validation passes: pytest, ruff, mypy, archbrace check .
+- [x] `path` remains and equals `wrapper_path.labels`
+- [x] Raw measurements explain every non-zero score bucket
+- [x] `reach.modules` reflects full traversal, not wrapper path alone
+- [x] Unresolved edge info is not duplicated across `reasons` and `caveats`
+- [x] All new fields are deterministic and covered by unit tests
+- [x] `docs/rules.md` documents the metadata contract and links here
+- [x] Full validation passes: pytest, ruff, mypy, archbrace check .

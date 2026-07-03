@@ -11,6 +11,7 @@ Archbrace answers project-structure questions such as:
 - Are side effects visible?
 - Is exception handling silent?
 - Are there long chains of pass-through wrapper functions?
+- Is a public entry point's workflow spread across too many files and layers?
 
 ## Status
 
@@ -26,6 +27,7 @@ and the following rules:
 | AR040 | Vague module name | error |
 | AR060 | Module contract | error |
 | AR070 | Wrapper chain too deep | warning |
+| AR073 | Flow locality index | warning |
 | AR101 | `print()` used instead of logger | error |
 | AR102 | Silent broad exception handler | error |
 
